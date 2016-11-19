@@ -8,30 +8,6 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 
-# Rocket trajectory optimization is a classic topic in Optimal Control.
-#
-# According to Pontryagin's maximum principle it's optimal to fire engine full throttle or
-# turn it off. That's the reason this environment is OK to have discreet actions (engine on or off).
-#
-# Landing pad is always at coordinates (0,0). Coordinates are the first two numbers in state vector.
-# Reward for moving from the top of the screen to landing pad and zero speed is about 100..140 points.
-# If lander moves away from landing pad it loses reward back. Episode finishes if the lander crashes or
-# comes to rest, receiving additional -100 or +100 points. Each leg ground contact is +10. Firing main
-# engine is -0.3 points each frame. Solved is 200 points.
-#
-# Landing outside landing pad is possible. Fuel is infinite, so an agent can learn to fly and then land
-# on its first attempt. Please see source code for details.
-#
-# Too see heuristic landing, run:
-#
-# python gym/envs/box2d/lunar_lander.py
-#
-# To play yourself, run:
-#
-# python examples/agents/keyboard_agent.py LunarLander-v0
-#
-# Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
-
 FPS    = 50
 SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
 
@@ -70,7 +46,7 @@ class ContactDetector(contactListener):
             if self.env.legs[i] in [contact.fixtureA.body, contact.fixtureB.body]:
                 self.env.legs[i].ground_contact = False
 
-class LunarLander(gym.Env):
+class SSLSimpleNav(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second' : FPS
@@ -84,7 +60,8 @@ class LunarLander(gym.Env):
 
         self.world = Box2D.b2World()
         self.moon = None
-        self.lander = None
+        self.robots = [] 
+        self.ball 
         self.particles = []
 
         self.prev_reward = None
@@ -212,7 +189,8 @@ class LunarLander(gym.Env):
         self.drawlist = [self.lander] + self.legs
 
         return self._step(np.array([0,0]) if self.continuous else 0)[0]
-
+    
+    '''
     def _create_particle(self, mass, x, y, ttl):
         p = self.world.CreateDynamicBody(
             position = (x,y),
@@ -233,7 +211,7 @@ class LunarLander(gym.Env):
     def _clean_particles(self, all):
         while self.particles and (all or self.particles[0].ttl<0):
             self.world.DestroyBody(self.particles.pop(0))
-
+    '''
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid " % (action,type(action))
 
@@ -355,7 +333,7 @@ class LunarLander(gym.Env):
 
         return self.viewer.render(return_rgb_array = mode=='rgb_array')
 
-class LunarLanderContinuous(LunarLander):
+class SSLSimpleNavContinuous(SSLSimpleNav):
     continuous = True
 
 def heuristic(env, s):
@@ -390,8 +368,8 @@ def heuristic(env, s):
     return a
 
 if __name__=="__main__":
-    #env = LunarLander()
-    env = LunarLanderContinuous()
+    #env = SSLSimpleNav()
+    env = SSLSimpleNavContinuous()
     s = env.reset()
     total_reward = 0
     steps = 0
