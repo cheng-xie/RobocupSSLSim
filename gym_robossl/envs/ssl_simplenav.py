@@ -61,8 +61,6 @@ class SSLSimpleNav(gym.Env):
         self.world = Box2D.b2World()
         self.moon = None
         self.robots = [] 
-        self.ball 
-        self.particles = []
 
         self.prev_reward = None
 
@@ -87,7 +85,6 @@ class SSLSimpleNav(gym.Env):
     def _destroy(self):
         if not self.moon: return
         self.world.contactListener = None
-        self._clean_particles(True)
         self.world.DestroyBody(self.moon)
         self.moon = None
         self.world.DestroyBody(self.lander)
@@ -190,28 +187,6 @@ class SSLSimpleNav(gym.Env):
 
         return self._step(np.array([0,0]) if self.continuous else 0)[0]
     
-    '''
-    def _create_particle(self, mass, x, y, ttl):
-        p = self.world.CreateDynamicBody(
-            position = (x,y),
-            angle=0.0,
-            fixtures = fixtureDef(
-                shape=circleShape(radius=2/SCALE, pos=(0,0)),
-                density=mass,
-                friction=0.1,
-                categoryBits=0x0100,
-                maskBits=0x001,  # collide only with ground
-                restitution=0.3)
-                )
-        p.ttl = ttl
-        self.particles.append(p)
-        self._clean_particles(False)
-        return p
-
-    def _clean_particles(self, all):
-        while self.particles and (all or self.particles[0].ttl<0):
-            self.world.DestroyBody(self.particles.pop(0))
-    '''
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid " % (action,type(action))
 
@@ -231,8 +206,6 @@ class SSLSimpleNav(gym.Env):
             ox =  tip[0]*(4/SCALE + 2*dispersion[0]) + side[0]*dispersion[1]   # 4 is move a bit downwards, +-2 for randomness
             oy = -tip[1]*(4/SCALE + 2*dispersion[0]) - side[1]*dispersion[1]
             impulse_pos = (self.lander.position[0] + ox, self.lander.position[1] + oy)
-            p = self._create_particle(3.5, impulse_pos[0], impulse_pos[1], m_power)    # particles are just a decoration, 3.5 is here to make particle speed adequate
-            p.ApplyLinearImpulse(           ( ox*MAIN_ENGINE_POWER*m_power,  oy*MAIN_ENGINE_POWER*m_power), impulse_pos, True)
             self.lander.ApplyLinearImpulse( (-ox*MAIN_ENGINE_POWER*m_power, -oy*MAIN_ENGINE_POWER*m_power), impulse_pos, True)
 
         s_power = 0.0
@@ -248,8 +221,6 @@ class SSLSimpleNav(gym.Env):
             ox =  tip[0]*dispersion[0] + side[0]*(3*dispersion[1]+direction*SIDE_ENGINE_AWAY/SCALE)
             oy = -tip[1]*dispersion[0] - side[1]*(3*dispersion[1]+direction*SIDE_ENGINE_AWAY/SCALE)
             impulse_pos = (self.lander.position[0] + ox - tip[0]*17/SCALE, self.lander.position[1] + oy + tip[1]*SIDE_ENGINE_HEIGHT/SCALE)
-            p = self._create_particle(0.7, impulse_pos[0], impulse_pos[1], s_power)
-            p.ApplyLinearImpulse(           ( ox*SIDE_ENGINE_POWER*s_power,  oy*SIDE_ENGINE_POWER*s_power), impulse_pos, True)
             self.lander.ApplyLinearImpulse( (-ox*SIDE_ENGINE_POWER*s_power, -oy*SIDE_ENGINE_POWER*s_power), impulse_pos, True)
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
@@ -302,17 +273,10 @@ class SSLSimpleNav(gym.Env):
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
             self.viewer.set_bounds(0, VIEWPORT_W/SCALE, 0, VIEWPORT_H/SCALE)
 
-        for obj in self.particles:
-            obj.ttl -= 0.15
-            obj.color1 = (max(0.2,0.2+obj.ttl), max(0.2,0.5*obj.ttl), max(0.2,0.5*obj.ttl))
-            obj.color2 = (max(0.2,0.2+obj.ttl), max(0.2,0.5*obj.ttl), max(0.2,0.5*obj.ttl))
-
-        self._clean_particles(False)
-
         for p in self.sky_polys:
             self.viewer.draw_polygon(p, color=(0,0,0))
 
-        for obj in self.particles + self.drawlist:
+        for obj in self.drawlist:
             for f in obj.fixtures:
                 trans = f.body.transform
                 if type(f.shape) is circleShape:
