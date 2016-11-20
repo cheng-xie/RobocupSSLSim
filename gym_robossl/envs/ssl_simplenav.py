@@ -11,22 +11,7 @@ from gym.utils import seeding
 FPS    = 50
 SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
 
-MAIN_ENGINE_POWER  = 13.0
-SIDE_ENGINE_POWER  =  0.6
-
 INITIAL_RANDOM = 1000.0   # Set 1500 to make game harder
-
-LANDER_POLY =[
-    (-14,+17), (-17,0), (-17,-10),
-    (+17,-10), (+17,0), (+14,+17)
-    ]
-LEG_AWAY = 20
-LEG_DOWN = 18
-LEG_W, LEG_H = 2, 8
-LEG_SPRING_TORQUE = 40
-
-SIDE_ENGINE_HEIGHT = 14.0
-SIDE_ENGINE_AWAY   = 12.0
 
 VIEWPORT_W = 600
 VIEWPORT_H = 400
@@ -146,12 +131,9 @@ class SSLSimpleNav(gym.Env):
                 )
         self.robot.color1 = (0.5,0.4,0.9)
         self.robot.color2 = (0.5,0.4,0.9)
-
-        self.robot.ApplyForceToCenter( (
-            self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM),
-            self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM)
-            ), True)
-
+        
+        
+               
         self.drawlist = [self.robot]
 
         return self._step(np.array([0,0]) if self.continuous else 0)[0]
@@ -189,14 +171,20 @@ class SSLSimpleNav(gym.Env):
             impulse_pos = (self.lander.position[0] + ox - tip[0]*17/SCALE, self.lander.position[1] + oy + tip[1]*SIDE_ENGINE_HEIGHT/SCALE)
             self.lander.ApplyLinearImpulse( (-ox*SIDE_ENGINE_POWER*s_power, -oy*SIDE_ENGINE_POWER*s_power), impulse_pos, True)
         '''
+         
+         self.robot.ApplyForceToCenter( (
+            self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM),
+            self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM)
+            ), True)
+
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
 
         pos = self.robot.position
         vel = self.robot.linearVelocity
         state = [
-            (pos.x - VIEWPORT_W/SCALE/2) / (VIEWPORT_W/SCALE/2),
-            (pos.y - (self.helipad_y+LEG_DOWN/SCALE)) / (VIEWPORT_W/SCALE/2),
+            pos.x,
+            pos.y,
             vel.x*(VIEWPORT_W/SCALE/2)/FPS,
             vel.y*(VIEWPORT_H/SCALE/2)/FPS,
             self.robot.angle,

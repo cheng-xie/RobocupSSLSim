@@ -3,8 +3,9 @@ class Robot:
 
     self.box2d_body = None
     
-    def __init__(self, world, position):
-
+    def __init__(self, world, position, angle):
+        self.reset() 
+        reset(self, world, position, angle):
 
 
     def render(self, viewer):
@@ -24,8 +25,11 @@ class Robot:
                 restitution=0.5) # 0.99 bouncy
                 )
 
+'''
 # We control
 class FriendlyRobot(Robot):
 
+
 # Robots controlled by antagonistic agent 
 class EnemyRobot(Robot):
+'''
