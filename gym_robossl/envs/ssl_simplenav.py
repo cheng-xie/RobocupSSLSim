@@ -9,7 +9,7 @@ from gym import spaces
 from gym.utils import seeding
 
 FPS    = 50
-SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
+SCALE  = 10.0   # affects how fast-paced the game is, forces should be adjusted as well
 
 INITIAL_RANDOM = 1000.0   # Set 1500 to make game harder
 
@@ -104,7 +104,14 @@ class SSLSimpleNav(gym.Env):
         smooth_y = [0.33*(height[i-1] + height[i+0] + height[i+1]) for i in range(CHUNKS)]
 
         self.moon = self.world.CreateStaticBody( shapes=edgeShape(vertices=[(0, 0), (W, 0)]) )
+        self.moon.CreateEdgeFixture(
+            vertices=[(0,H/4),(W,H/4)],
+            density=0,
+            friction=0.1)
         self.sky_polys = []
+        #self.sky_polys.append( [(0,H/4), (W,H/4), (0,H), (W,H)] )
+        #self.sky_polys.append( [p1, p2, (p2[0],H), (p1[0],H)] )
+        '''
         for i in range(CHUNKS-1):
             p1 = (chunk_x[i],   smooth_y[i])
             p2 = (chunk_x[i+1], smooth_y[i+1])
@@ -112,7 +119,7 @@ class SSLSimpleNav(gym.Env):
                 vertices=[p1,p2],
                 density=0,
                 friction=0.1)
-            self.sky_polys.append( [p1, p2, (p2[0],H), (p1[0],H)] )
+        ''' 
 
         self.moon.color1 = (0.0,0.0,0.0)
         self.moon.color2 = (0.0,0.0,0.0)
@@ -172,7 +179,7 @@ class SSLSimpleNav(gym.Env):
             self.lander.ApplyLinearImpulse( (-ox*SIDE_ENGINE_POWER*s_power, -oy*SIDE_ENGINE_POWER*s_power), impulse_pos, True)
         '''
          
-         self.robot.ApplyForceToCenter( (
+        self.robot.ApplyForceToCenter( (
             self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM),
             self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM)
             ), True)
@@ -227,9 +234,10 @@ class SSLSimpleNav(gym.Env):
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
             self.viewer.set_bounds(0, VIEWPORT_W/SCALE, 0, VIEWPORT_H/SCALE)
-
-        for p in self.sky_polys:
-            self.viewer.draw_polygon(p, color=(0,0,0))
+        
+        W = VIEWPORT_W/SCALE
+        H = VIEWPORT_H/SCALE
+        self.viewer.draw_polygon([(0,0),(W,0),(W,H),(0,H)], color=(0,0,0))
 
         for obj in self.drawlist:
             for f in obj.fixtures:
@@ -301,4 +309,4 @@ if __name__=="__main__":
             print(["{:+0.2f}".format(x) for x in s])
             print("step {} total_reward {:+0.2f}".format(steps, total_reward))
         steps += 1
-        if done: break
+        #if done: break
