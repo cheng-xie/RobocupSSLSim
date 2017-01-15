@@ -8,6 +8,6 @@ during training.
 class ExperienceReplay:
 
     def batch_sample(self):
-    
+            
     def put(self):
         
