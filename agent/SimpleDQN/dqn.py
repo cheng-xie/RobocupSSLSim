@@ -110,8 +110,9 @@ class DQN:
             self.action = tf.placeholder('int64', [None], name = 'action')
             # batch, features, depth
             action_one_hot = tf.one_hot(self.action, self.action_size, axis = -1)
-            # get the per batch q value
-            q_for_action = self.reduce_sum(tf.mul(self.q_train, action_one_hot), 1)
+
+            # get q values for the action we chose, mask self.q
+            q_for_action = self.reduce_sum(tf.multiply(self.q, action_one_hot), 1)
 
             # get loss from two
             self.loss = clipped_error(self.yDQN-q_for_action)

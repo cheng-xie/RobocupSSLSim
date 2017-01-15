@@ -1,1 +1,1 @@
-from gym_robossl.envs.ssl_simplenav import SSLSimpleNav
+from gym_robossl.envs.ssl_simplenav import SSLSimpleNav, SSLSimpleNavContinuous

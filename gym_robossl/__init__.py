@@ -10,3 +10,11 @@ register(
     reward_threshold=10.0,
     nondeterministic=True,
 )
+
+register(
+    id='SSLNavCont-v0',
+    entry_point='gym_robossl.envs:SSLSimpleNavContinuos',
+    timestep_limit='5000',
+    reward_threshold=10.0,
+    nondeterministic=True,
+)
