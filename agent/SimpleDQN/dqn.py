@@ -92,7 +92,8 @@ class DQN:
 
             # batch, features, depth
             action_one_hot = tf.one_hot(self.action, self.action_size, axis = -1)
-            self.reduce
+            # get q values for the action we chose
+            self.reduce_sum(tf.multiply(self.q, action_one_hot))
 
             # get loss from two
 
