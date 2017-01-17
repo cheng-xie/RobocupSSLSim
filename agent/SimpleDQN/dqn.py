@@ -21,15 +21,41 @@ class DQN:
         self.state_size = state_size
         self.action_size = action_size
     
-    def predict(self, state):
+    def predict_action(self, state):
         # predict the next action
         return self.q_train_action.eval({self.s_t:[state]})
+    
+    def get_target_qs(self, state, action_idxs)
+        return self.target_q_wtih_idx.eval({self.t_s_t:[state], self.target_idx:[[i, act] for i, act in enumerate(action_idxs)]})
+    
+    def train(self, state, actions, reward, state1, done):
+        # generate yDQN = r + gamma Q_t(s',argmax Q(s',a'))
+        # find argmax Q(s', a')
+        predicted_action = self.predict_action(s_t1)
+        q_target = self.get_target_qs(s_t1, predicted_action)
+        # if we are done just look at the final reward
+        yDQN = reward + self.discount_factor * q_target * (1.-done)
+        # feed into optim step
+        q_train, _, loss = self.sess.run([self.q_train, self.optim, self.loss],
+            {
+                self.s_t: state,
+                self.action: actions,
+                self.yDQN: yDQN,
+            }
+        )
+        return q_train, loss 
+    
+    def update_target(self):
+        # assign each of the weights from train
+        for name in self.w['train'].keys():
+            self.assign_params_op[name].eval(
+                    {self.assign_params[name]: self.w['train'][name].eval()})
 
     def build_QNet(self):
         self.q_train, self.q_train_action = self._build_train()
         self.q_target, self.target_q_idx, self.target_q_with_idx = self._build_target()
         self._build_update()
-    
+        self._build_optim()  
     
 
     def _build_train(self):
@@ -104,6 +130,7 @@ class DQN:
     def _build_optim(self):
         with tf.variable_scope('optimizer'):
             # we can evaluate this seperately since we dont have to propagate errors
+            # fed in using r+gammaQ_t(s', argmax Q(s',a'))
             self.yDQN = tf.placeholder('float32', [None], name = 'yDQN')
             
             # find true q for action batch
@@ -111,11 +138,12 @@ class DQN:
             # batch, features, depth
             action_one_hot = tf.one_hot(self.action, self.action_size, axis = -1)
 
-            # get q values for the action we chose, mask self.q
-            q_for_action = self.reduce_sum(tf.multiply(self.q, action_one_hot), 1)
+            # get q values for the action we chose, mask self.q with element wise mult
+            # -> q for each batch
+            q_for_step = self.reduce_sum(tf.multiply(self.q_train, action_one_hot), 1)
 
-            # get loss from two
-            self.loss = clipped_error(self.yDQN-q_for_action)
+            # get loss from TD
+            self.loss = clipped_error(self.yDQN-q_for_step)
             # optimize
             self.optim = tf.train.AdamOptimizer().minimize(self.loss) 
 

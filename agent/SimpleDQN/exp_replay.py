@@ -6,7 +6,9 @@ during training.
 '''
 
 class ExperienceReplay:
+    def __init__(self):
 
+    
     def batch_sample(self):
             
     def put(self):
