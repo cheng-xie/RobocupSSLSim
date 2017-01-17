@@ -25,9 +25,15 @@ class DQNAgent:
             # Train Q-network 
             q, loss = self.train_network() 
             # Update target network
-             
+            self.update_target()
+
     def test():
-    
+        for self.step in xrange(start, end):
+            # Get env state
+            cur_state =
+            # Act on the environment
+            cur_action = self.get_next_action(cur_state) 
+
     def update_target(self):
         self.qnet.update_target()
 

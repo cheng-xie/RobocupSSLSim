@@ -6,10 +6,11 @@ during training.
 '''
 
 class ExperienceReplay:
+    'implemented like a circular buffer'
     def __init__(self):
 
     
     def batch_sample(self):
             
-    def put(self):
-        
+    def put(self, exp_tuple):
+         
