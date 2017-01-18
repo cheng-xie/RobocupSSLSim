@@ -10,6 +10,6 @@ class Environment():
         self.cur_state, self.cur_reward, self.done, _ = self.env.step(cur_action)
         return self.cur_state, self.cur_reward, self.done
 
-    def new_game():
+    def new_game(self):
         self.cur_state = self.env.reset()
         return self.cur_state

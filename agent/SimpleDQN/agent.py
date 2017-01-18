@@ -5,9 +5,11 @@ from exp_replay import ExperienceReplay
 class DQNAgent:
     
     def __init__(self, env):
-        self.qnet = DQN()
-        self.xrep = ExperienceReplay() 
         self.env = env
+        self.state_size = 8
+        self.action_size = 4
+        self.qnet = DQN(self.state_size, self.action_size)
+        self.xrep = ExperienceReplay() 
 
     def store_exp(self, cur_state, new_state, reward, action):
         xrep.put(cur_state, new_state, reward, action)

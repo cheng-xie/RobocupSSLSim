@@ -8,8 +8,10 @@ during training.
 
 class ExperienceReplay:
     'implemented like a circular buffer'
-    def __init__(self):
+    def __init__(self, state_size):
         # use a current write index implementation for the circular buffer
+        self.state_size = state_size
+ 
         self.current_index = 0
         self.length = 10000
         self.actions = np.empty(self.length, dtype = np.uint8) 
