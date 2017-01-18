@@ -92,21 +92,6 @@ class SSLSimpleNav(gym.Env):
         self.drawlist = []
         
         # terrain
-        '''
-        CHUNKS = 11
-        height = self.np_random.uniform(0, H/2, size=(CHUNKS+1,) )
-        chunk_x  = [W/(CHUNKS-1)*i for i in range(CHUNKS)]
-        self.helipad_x1 = chunk_x[CHUNKS//2-1]
-        self.helipad_x2 = chunk_x[CHUNKS//2+1]
-        self.helipad_y  = H/4
-        height[CHUNKS//2-2] = self.helipad_y
-        height[CHUNKS//2-1] = self.helipad_y
-        height[CHUNKS//2+0] = self.helipad_y
-        height[CHUNKS//2+1] = self.helipad_y
-        height[CHUNKS//2+2] = self.helipad_y
-        smooth_y = [0.33*(height[i-1] + height[i+0] + height[i+1]) for i in range(CHUNKS)]
-        '''
-
         self.moon = self.world.CreateStaticBody( shapes=edgeShape(vertices=[(0, H/8), (W, H/8)]) )
         self.moon.CreateEdgeFixture(
             vertices=[(W/8,0),(W/8,H)],
@@ -119,18 +104,6 @@ class SSLSimpleNav(gym.Env):
             vertices=[(W*7/8,0),(W*7/8,H)],
             density=0,
             friction=0.1)
-        #self.sky_polys = []
-        #self.sky_polys.append( [(0,H/4), (W,H/4), (0,H), (W,H)] )
-        #self.sky_polys.append( [p1, p2, (p2[0],H), (p1[0],H)] )
-        '''
-        for i in range(CHUNKS-1):
-            p1 = (chunk_x[i],   smooth_y[i])
-            p2 = (chunk_x[i+1], smooth_y[i+1])
-            self.moon.CreateEdgeFixture(
-                vertices=[p1,p2],
-                density=0,
-                friction=0.1)
-        ''' 
 
         self.moon.color1 = (0.9,0.9,0.9)
         self.moon.color2 = (0.9,0.9,0.9)
@@ -212,6 +185,8 @@ class SSLSimpleNav(gym.Env):
         # Package world state
         pos = self.robot.position
         vel = self.robot.linearVelocity
+        posball = self.ball.position
+        velball = self.ball.linearVelocity
         state = [
             pos.x,
             pos.y,
@@ -219,8 +194,8 @@ class SSLSimpleNav(gym.Env):
             vel.y*(VIEWPORT_H/SCALE/2)/FPS,
             self.robot.angle,
             20.0*self.robot.angularVelocity/FPS,
-            0.0,
-            0.0
+            posball.x,
+            posball.y 
             ]
         assert len(state)==8
         

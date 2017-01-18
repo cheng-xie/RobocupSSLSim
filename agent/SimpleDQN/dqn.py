@@ -16,6 +16,7 @@ Model used to predict Q values
 class DQN:
     
     def __init__(self, state_size, action_size):
+        self.discounting_factor = 0.9
         self.w = {'train': {}, 'target': {}}
         self.dueling = True
         self.state_size = state_size
