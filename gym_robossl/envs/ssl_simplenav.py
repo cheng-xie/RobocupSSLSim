@@ -208,18 +208,20 @@ class SSLSimpleNav(gym.Env):
         self.prev_shaping = shaping
         '''
 
-        reward -= powert*0.30  # less fuel spent is better
+        reward -= powert*0.030  # less fuel spent is better
         #reward -= s_power*0.03
         
 
         # Determine completion
         done = False
+        ''' 
         if self.game_over or abs(state[0]) >= 1.0:
             done   = True
             reward = -100
         if not self.robot.awake:
             done   = True
             reward = +100
+        '''
         return np.array(state), reward, False, {}
 
 
