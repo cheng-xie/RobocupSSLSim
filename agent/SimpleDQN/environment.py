@@ -9,9 +9,10 @@ class Environment():
         self.env = gym.make('SSLNav-v0')
         self.cur_state = None
 
-    def next_state(self, cur_action):
+    def next_state(self, cur_action, render = True):
         self.cur_state, self.cur_reward, self.done, _ = self.env.step(cur_action)
-        self.env.render() 
+        if render:
+            self.env.render() 
         return self.cur_state, self.cur_reward, self.done
 
     def new_game(self):

@@ -16,7 +16,7 @@ class DQN:
     
     def __init__(self, sess, state_size, action_size):
         self.sess = sess
-        self.gamma = 0.9
+        self.gamma = 0.98
         self.w = {'train': {}, 'target': {}}
         self.dueling = True
         self.state_size = state_size
@@ -64,23 +64,22 @@ class DQN:
     
 
     def _build_train(self):
-        activation_fn = tf.nn.relu
+        activation_fn = tf.nn.sigmoid
         with tf.variable_scope('train'):
             # batched s_t to batched q and q_action
             self.s_t = tf.placeholder('float32', [None, self.state_size], name='s_t')
 
             # MLP Feature Extraction (s_t -> l3)
-            l1, self.w['train']['l1_w'], self.w['train']['l1_b'] = linear(self.s_t, 256, activation_fn=activation_fn, name='l1')
-            l2, self.w['train']['l2_w'], self.w['train']['l2_b'] = linear(l1, 128, activation_fn=activation_fn, name='l2')
-            l3, self.w['train']['l3_w'], self.w['train']['l3_b'] = linear(l2, 64, activation_fn=activation_fn, name='l3')
-
+            l1, self.w['train']['l1_w'], self.w['train']['l1_b'] = linear(self.s_t, 32, activation_fn=activation_fn, name='l1')
+            l2, self.w['train']['l2_w'], self.w['train']['l2_b'] = linear(l1, 16, activation_fn=activation_fn, name='l2')
+            l3, self.w['train']['l3_w'], self.w['train']['l3_b'] = linear(l2, 16, activation_fn=activation_fn, name='l3')
             if self.dueling:
                 # Value Net : V(s) is scalar (l3 -> value)
-                value_hid, self.w['train']['l4_val_w'], self.w['train']['l4_val_b'] = linear(l3, 512, activation_fn=activation_fn, name='value_hid')
+                value_hid, self.w['train']['l4_val_w'], self.w['train']['l4_val_b'] = linear(l3, 16, activation_fn=activation_fn, name='value_hid')
                 value, self.w['train']['val_w_out'], self.w['train']['val_w_b'] = linear(value_hid, 1, name='value_out')
                 
                 # Advantage Net : A(s) is vector with advantage given each action (l3 -> advantage)
-                adv_hid, self.w['train']['l4_adv_w'], self.w['train']['l4_adv_b'] = linear(l3, 512, activation_fn=activation_fn, name='adv_hid')
+                adv_hid, self.w['train']['l4_adv_w'], self.w['train']['l4_adv_b'] = linear(l3, 16, activation_fn=activation_fn, name='adv_hid')
                 advantage, self.w['train']['adv_w_out'], self.w['train']['adv_w_b'] = linear(adv_hid, self.action_size, name='adv_out')
 
                 # Average Dueling (Subtract mean advantage) Q=V+A-mean(A)
@@ -95,29 +94,28 @@ class DQN:
             return q_train, q_action
 
     def _build_target(self):
-        activation_fn = tf.nn.relu
+        activation_fn = tf.nn.sigmoid
         with tf.variable_scope('target'):
             self.t_s_t = tf.placeholder('float32', [None, self.state_size], name='t_s_t')
 
             # MLP Feature Extraction
-            l1, self.w['target']['l1_w'], self.w['target']['l1_b'] = linear(self.t_s_t, 256, activation_fn=activation_fn, name='l1')
-            l2, self.w['target']['l2_w'], self.w['target']['l2_b'] = linear(l1, 128, activation_fn=activation_fn, name='l2')
-            l3, self.w['target']['l3_w'], self.w['target']['l3_b'] = linear(l2, 64, activation_fn=activation_fn, name='l3')
-
+            l1, self.w['target']['l1_w'], self.w['target']['l1_b'] = linear(self.t_s_t, 32, activation_fn=activation_fn, name='l1')
+            l2, self.w['target']['l2_w'], self.w['target']['l2_b'] = linear(l1, 16, activation_fn=activation_fn, name='l2')
+            l3, self.w['target']['l3_w'], self.w['target']['l3_b'] = linear(l2, 16, activation_fn=activation_fn, name='l3')
             if self.dueling:
                 # Value Net : V(s) is scalar
-                value_hid, self.w['target']['l4_val_w'], self.w['target']['l4_val_b'] = linear(l3, 512, activation_fn=activation_fn, name='value_hid')
+                value_hid, self.w['target']['l4_val_w'], self.w['target']['l4_val_b'] = linear(l3, 16, activation_fn=activation_fn, name='value_hid')
                 value, self.w['target']['val_w_out'], self.w['target']['val_w_b'] = linear(value_hid, 1, name='value_out')
                 
                 # Advantage Net : A(s) is vector with advantage given each action
-                adv_hid, self.w['target']['l4_adv_w'], self.w['target']['l4_adv_b'] = linear(l3, 512, activation_fn=activation_fn, name='adv_hid')
+                adv_hid, self.w['target']['l4_adv_w'], self.w['target']['l4_adv_b'] = linear(l3, 16, activation_fn=activation_fn, name='adv_hid')
                 advantage, self.w['target']['adv_w_out'], self.w['target']['adv_w_b'] = linear(adv_hid, self.action_size, name='adv_out')
 
                 # Average Dueling (Subtract mean advantage)
                 q_target = value + (advantage - tf.reduce_mean(advantage, reduction_indices=1, keep_dims=True))
             
             else:
-                l4, self.w['target']['l4_w'], self.w['target']['l4_b'] = linear(l3_flat, 512, activation_fn=activation_fn, name='l4')
+                l4, self.w['target']['l4_w'], self.w['target']['l4_b'] = linear(l3_flat, 32, activation_fn=activation_fn, name='l4')
                 q_target, self.w['target']['q_w'], self.w['target']['q_b'] = linear(l4, self.action_size, name='q')
             
             # The action we use will depend if we use double q learning

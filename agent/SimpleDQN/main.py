@@ -6,4 +6,4 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         env = Environment()
         agent = DQNAgent(env, sess) 
-        agent.train(100000) 
+        agent.train(3000000) 

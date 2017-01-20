@@ -170,15 +170,16 @@ class SSLSimpleNav(gym.Env):
             s_power = s_power/powert
             y_power = y_power/powert
 
-        self.robot.ApplyForceToCenter( ( s_power*10000/SCALE, y_power*10000/SCALE), True) 
+        self.robot.ApplyForceToCenter( ( s_power*1000/SCALE, y_power*1000/SCALE), True) 
        
 
         # Random Noise
+        '''
         self.robot.ApplyForceToCenter( (
             self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM),
             self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM)
         ), True)
-
+        '''
         self.world.Step(1.0/FPS, 6*30, 2*30)
         
 
@@ -188,16 +189,16 @@ class SSLSimpleNav(gym.Env):
         posball = self.ball.position
         velball = self.ball.linearVelocity
         state = [
-            pos.x,
-            pos.y,
+            pos.x/(VIEWPORT_W/SCALE/2),
+            pos.y/(VIEWPORT_W/SCALE/2),
             vel.x*(VIEWPORT_W/SCALE/2)/FPS,
             vel.y*(VIEWPORT_H/SCALE/2)/FPS,
-            self.robot.angle,
-            20.0*self.robot.angularVelocity/FPS,
-            posball.x,
-            posball.y 
+            #self.robot.angle,
+            #20.0*self.robot.angularVelocity/FPS,
+            posball.x/(VIEWPORT_W/SCALE/2),
+            posball.y/(VIEWPORT_W/SCALE/2) 
             ]
-        assert len(state)==8
+        assert len(state)==6
         
 
         # Calculate reward
@@ -209,6 +210,7 @@ class SSLSimpleNav(gym.Env):
         '''
 
         reward -= powert*0.030  # less fuel spent is better
+        reward -= ((pos-(posball)).lengthSquared/(VIEWPORT_W/SCALE)/(VIEWPORT_W/SCALE)-0.1)  # get close to the ball
         #reward -= s_power*0.03
         
 
