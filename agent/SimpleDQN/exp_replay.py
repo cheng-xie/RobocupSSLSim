@@ -35,7 +35,15 @@ class ExperienceReplay:
         a_t = self.actions[idxs]
         r_t = self.rewards[idxs]
         done = self.dones[idxs]
-        
+
+        '''
+        j = 0
+        print(s_t[j], s_t1[j], a_t[j], r_t[j], done[j])
+        j = 1
+        print(s_t[j], s_t1[j], a_t[j], r_t[j], done[j])
+        raw_input("Press Enter to continue...")
+        '''
+
         return s_t, a_t, r_t, s_t1, done
 
     def put(self, s_t, a_t, reward, done):

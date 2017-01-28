@@ -12,7 +12,7 @@ class DQNAgent:
         self.state_size = 6
         self.batch_size = 128 
         self.start_train = 2370100 
-        self.train_freq = 20 
+        self.train_freq = 10 
         self.action_size = self.env.action_size 
         self.qnet = DQN(self.sess, self.state_size, self.action_size)
         self.xrep = ExperienceReplay(self.state_size) 
@@ -24,13 +24,12 @@ class DQNAgent:
         # fill experience replay
         # start the process
         self.env.new_game()
-        self.ep = 1
        
         for self.step in xrange(self.start_train):
             # Get env state
             cur_state = self.env.cur_state
             # Act on the environment
-            cur_action = self.get_next_action(cur_state)
+            cur_action = self.get_next_action(cur_state, 1)
             
             next_state, reward, done = self.env.next_state(cur_action, render = (self.step % 1500 == 0)) 
             # Save experience
@@ -48,7 +47,7 @@ class DQNAgent:
             # Get env state
             cur_state = self.env.cur_state
             # Act on the environment
-            cur_action = self.get_next_action(cur_state)
+            cur_action = self.get_next_action(cur_state, self.ep)
             
             next_state, reward, done = self.env.next_state(cur_action, render = (self.step % 800 == 0)) 
             # Save experience
@@ -71,6 +70,9 @@ class DQNAgent:
                     tot_q = 0
                     tot_loss = 0
                     tot_reward = 0
+                    for _ in xrange(1000):
+                        cur_action = self.get_next_action(cur_state)
+                        self.env.next_state(cur_action, render = True) 
 
             if done:
                 # start a new game
@@ -96,8 +98,8 @@ class DQNAgent:
         q, loss = self.qnet.train(s_t, action, reward, s_t1, done)  
         return q, loss
 
-    def get_next_action(self, cur_state):
-        if random.random() < self.ep:
+    def get_next_action(self, cur_state, eps=1):
+        if random.random() < eps:
             action = random.randrange(self.env.action_size)
         else:
             action = self.qnet.predict_action(cur_state.reshape(1,-1))[0]

@@ -18,10 +18,17 @@ class DQN:
         self.sess = sess
         self.gamma = 0.98
         self.w = {'train': {}, 'target': {}}
-        self.dueling = True
+        self.dueling = False 
         self.state_size = state_size
         self.action_size = action_size
         self.build_QNet()
+        self._saver = tf.train.Saver(self.w['train'].values())
+
+    def save_net(self, path):
+       self._saver(self.sess, path) 
+
+    def load_net(self, path):
+        self.
 
 
     def predict_action(self, state):
@@ -72,7 +79,8 @@ class DQN:
             # MLP Feature Extraction (s_t -> l3)
             l1, self.w['train']['l1_w'], self.w['train']['l1_b'] = linear(self.s_t, 32, activation_fn=activation_fn, name='l1')
             l2, self.w['train']['l2_w'], self.w['train']['l2_b'] = linear(l1, 16, activation_fn=activation_fn, name='l2')
-            l3, self.w['train']['l3_w'], self.w['train']['l3_b'] = linear(l2, 16, activation_fn=activation_fn, name='l3')
+            #l3, self.w['train']['l3_w'], self.w['train']['l3_b'] = linear(l2, 16, activation_fn=activation_fn, name='l3')
+            l3 = l2
             if self.dueling:
                 # Value Net : V(s) is scalar (l3 -> value)
                 value_hid, self.w['train']['l4_val_w'], self.w['train']['l4_val_b'] = linear(l3, 16, activation_fn=activation_fn, name='value_hid')
@@ -86,7 +94,7 @@ class DQN:
                 q_train = value + (advantage - tf.reduce_mean(advantage, reduction_indices=1, keep_dims=True))
             
             else:
-                l4, self.w['train']['l4_w'], self.w['train']['l4_b'] = linear(l3_flat, 512, activation_fn=activation_fn, name='l4')
+                l4, self.w['train']['l4_w'], self.w['train']['l4_b'] = linear(l3_flat, 16, activation_fn=activation_fn, name='l4')
                 q_train, self.w['train']['q_w'], self.w['train']['q_b'] = linear(l4, self.action_size, name='q')
             
             # Greedy policy
@@ -101,7 +109,8 @@ class DQN:
             # MLP Feature Extraction
             l1, self.w['target']['l1_w'], self.w['target']['l1_b'] = linear(self.t_s_t, 32, activation_fn=activation_fn, name='l1')
             l2, self.w['target']['l2_w'], self.w['target']['l2_b'] = linear(l1, 16, activation_fn=activation_fn, name='l2')
-            l3, self.w['target']['l3_w'], self.w['target']['l3_b'] = linear(l2, 16, activation_fn=activation_fn, name='l3')
+            #l3, self.w['target']['l3_w'], self.w['target']['l3_b'] = linear(l2, 16, activation_fn=activation_fn, name='l3')
+            l3 = l2
             if self.dueling:
                 # Value Net : V(s) is scalar
                 value_hid, self.w['target']['l4_val_w'], self.w['target']['l4_val_b'] = linear(l3, 16, activation_fn=activation_fn, name='value_hid')
@@ -115,7 +124,7 @@ class DQN:
                 q_target = value + (advantage - tf.reduce_mean(advantage, reduction_indices=1, keep_dims=True))
             
             else:
-                l4, self.w['target']['l4_w'], self.w['target']['l4_b'] = linear(l3_flat, 32, activation_fn=activation_fn, name='l4')
+                l4, self.w['target']['l4_w'], self.w['target']['l4_b'] = linear(l3_flat, 16, activation_fn=activation_fn, name='l4')
                 q_target, self.w['target']['q_w'], self.w['target']['q_b'] = linear(l4, self.action_size, name='q')
             
             # The action we use will depend if we use double q learning
@@ -150,7 +159,7 @@ class DQN:
             # get loss from TD
             self.loss = clipped_error(self.yDQN-q_for_step)
             # optimize
-            self.optim = tf.train.AdamOptimizer().minimize(self.loss) 
+            self.optim = tf.train.RMSPropOptimizer(0.0015, momentum = 0.95, epsilon = 0.01).minimize(self.loss) 
 
     def clipped_error(x):
         # Huber loss
