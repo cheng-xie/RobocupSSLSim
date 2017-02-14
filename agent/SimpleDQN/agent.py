@@ -11,11 +11,12 @@ class DQNAgent:
         self.ep = 0.20
         self.state_size = 6
         self.batch_size = 128 
-        self.start_train = 2370100 
+        self.start_train = 1370100 
         self.train_freq = 10 
         self.action_size = self.env.action_size 
         self.qnet = DQN(self.sess, self.state_size, self.action_size)
         self.xrep = ExperienceReplay(self.state_size) 
+        print 'made agent'
 
     def store_exp(self, next_state, action, reward, done):
         self.xrep.put(next_state, action, reward, done)
@@ -34,6 +35,8 @@ class DQNAgent:
             next_state, reward, done = self.env.next_state(cur_action, render = (self.step % 1500 == 0)) 
             # Save experience
             self.store_exp(next_state, cur_action, reward, done)
+            
+            yield self.step
 
         self.ep = 0.3
         
@@ -77,6 +80,8 @@ class DQNAgent:
             if done:
                 # start a new game
                 self.env.new_game()
+            
+            yield self.step
     '''
     def test():
         for self.step in xrange(start, end):

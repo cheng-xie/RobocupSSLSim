@@ -215,6 +215,7 @@ class SSLSimpleNav(gym.Env):
         
 
         # Determine completion
+        
         done = False
         ''' 
         if self.game_over or abs(state[0]) >= 1.0:

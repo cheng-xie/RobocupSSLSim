@@ -2,7 +2,6 @@ import os
 import time
 import random
 import numpy as np
-from tqdm import tqdm
 import tensorflow as tf
 
 from ops import linear, clipped_error
@@ -16,7 +15,7 @@ class DQN:
     
     def __init__(self, sess, state_size, action_size):
         self.sess = sess
-        self.gamma = 0.98
+        self.gamma = 0.90
         self.w = {'train': {}, 'target': {}}
         self.dueling = False 
         self.state_size = state_size
@@ -25,11 +24,10 @@ class DQN:
         self._saver = tf.train.Saver(self.w['train'].values())
 
     def save_net(self, path):
-       self._saver(self.sess, path) 
+        self._saver.save(self.sess, path)
 
     def load_net(self, path):
-        self.
-
+        self._saver.restore(self.sess, path)
 
     def predict_action(self, state):
         # predict the next action
@@ -94,7 +92,7 @@ class DQN:
                 q_train = value + (advantage - tf.reduce_mean(advantage, reduction_indices=1, keep_dims=True))
             
             else:
-                l4, self.w['train']['l4_w'], self.w['train']['l4_b'] = linear(l3_flat, 16, activation_fn=activation_fn, name='l4')
+                l4, self.w['train']['l4_w'], self.w['train']['l4_b'] = linear(l3, 16, activation_fn=activation_fn, name='l4')
                 q_train, self.w['train']['q_w'], self.w['train']['q_b'] = linear(l4, self.action_size, name='q')
             
             # Greedy policy
@@ -124,7 +122,7 @@ class DQN:
                 q_target = value + (advantage - tf.reduce_mean(advantage, reduction_indices=1, keep_dims=True))
             
             else:
-                l4, self.w['target']['l4_w'], self.w['target']['l4_b'] = linear(l3_flat, 16, activation_fn=activation_fn, name='l4')
+                l4, self.w['target']['l4_w'], self.w['target']['l4_b'] = linear(l3, 16, activation_fn=activation_fn, name='l4')
                 q_target, self.w['target']['q_w'], self.w['target']['q_b'] = linear(l4, self.action_size, name='q')
             
             # The action we use will depend if we use double q learning
