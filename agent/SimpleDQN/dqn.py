@@ -13,7 +13,7 @@ Model used to predict Q values
 
 class DQN:
     
-    def __init__(self, sess, state_size, action_size):
+    def __init__(self, sess, state_size, action_size, load_path = None):
         self.sess = sess
         self.gamma = 0.90
         self.w = {'train': {}, 'target': {}}
@@ -22,6 +22,8 @@ class DQN:
         self.action_size = action_size
         self.build_QNet()
         self._saver = tf.train.Saver(self.w['train'].values())
+        if load_path:
+            self.load_net(load_path)
 
     def save_net(self, path):
         self._saver.save(self.sess, path)
@@ -51,7 +53,7 @@ class DQN:
                 self.yDQN: yDQN,
             }
         )
-        return q_train, loss 
+        return q_train, loss
     
     def update_target(self):
         # assign each of the weights from train

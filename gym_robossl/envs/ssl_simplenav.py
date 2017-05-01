@@ -180,7 +180,7 @@ class SSLSimpleNav(gym.Env):
             self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM)
         ), True)
         '''
-        self.world.Step(1.0/FPS, 6*30, 2*30)
+        self.world.Step(16./FPS, 6*30, 2*30)
         
 
         # Package world state
@@ -189,15 +189,17 @@ class SSLSimpleNav(gym.Env):
         posball = self.ball.position
         velball = self.ball.linearVelocity
         state = [
-            pos.x/(VIEWPORT_W/SCALE/2),
-            pos.y/(VIEWPORT_W/SCALE/2),
-            vel.x*(VIEWPORT_W/SCALE/2)/FPS,
-            vel.y*(VIEWPORT_H/SCALE/2)/FPS,
+            pos.x/(VIEWPORT_W/SCALE),
+            pos.y/(VIEWPORT_W/SCALE),
+            vel.x*(VIEWPORT_W/SCALE)/FPS,
+            vel.y*(VIEWPORT_H/SCALE)/FPS,
             #self.robot.angle,
             #20.0*self.robot.angularVelocity/FPS,
-            posball.x/(VIEWPORT_W/SCALE/2),
-            posball.y/(VIEWPORT_W/SCALE/2) 
+            posball.x/(VIEWPORT_W/SCALE),
+            posball.y/(VIEWPORT_W/SCALE) 
             ]
+        #print state
+        #raw_input()
         assert len(state)==6
         
 
@@ -209,14 +211,16 @@ class SSLSimpleNav(gym.Env):
         self.prev_shaping = shaping
         '''
 
-        reward -= powert*0.030  # less fuel spent is better
-        reward -= ((pos-(posball)).lengthSquared/(VIEWPORT_W/SCALE)/(VIEWPORT_W/SCALE)-0.1)  # get close to the ball
+        reward -= powert*0.0010  # less fuel spent is better
+        reward -= ((pos-(posball)).lengthSquared/(VIEWPORT_W/SCALE)/(VIEWPORT_W/SCALE)-0.08)  # get close to the ball
         #reward -= s_power*0.03
-        
+        #print reward 
 
         # Determine completion
-        
         done = False
+        if (pos-(posball)).length<2:
+            reward += 2
+            done = True
         ''' 
         if self.game_over or abs(state[0]) >= 1.0:
             done   = True
@@ -225,7 +229,7 @@ class SSLSimpleNav(gym.Env):
             done   = True
             reward = +100
         '''
-        return np.array(state), reward, False, {}
+        return np.array(state), reward, done, {}
 
 
     def _render(self, mode='human', close=False):
@@ -289,11 +293,6 @@ def heuristic(env, s):
     # PID controller: s[1] vertical coordinate s[3] vertical speed
     hover_todo = (hover_targ - s[1])*0.5 - (s[3])*0.5
     #print("hover_targ=%0.2f, hover_todo=%0.2f" % (hover_targ, hover_todo))
-
-    if s[6] or s[7]: # legs have contact
-        angle_todo = 0
-        hover_todo = -(s[3])*0.5  # override to reduce fall speed, that's all we need after contact
-
     if env.continuous:
         a = np.array( [hover_todo*20 - 1, -angle_todo*20] )
         a = np.clip(a, -1, +1)
