@@ -18,7 +18,7 @@ class Environment():
 
     def new_game(self):
         self.cur_state = self.env.reset()
-        self.env.render() 
+        #self.env.render() 
         return self.cur_state
 
     @property

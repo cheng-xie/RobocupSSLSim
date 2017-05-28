@@ -10,10 +10,10 @@ class DQNAgent:
     def __init__(self, env, sess, load_path = None):
         self.env = env
         self.sess = sess
-        self.ep = 0.20
+        self.ep = 0.35
         self.state_size = 6
         self.batch_size = 128 
-        self.start_train = 1370100 
+        self.start_train = 370100 
         self.train_freq = 10 
         self.action_size = self.env.action_size 
         self.qnet = DQN(self.sess, self.state_size, self.action_size, load_path)
@@ -23,7 +23,7 @@ class DQNAgent:
     def store_exp(self, next_state, action, reward, done):
         self.xrep.put(next_state, action, reward, done)
 
-    def train(self, numsteps):
+    def train(self, numsteps, save_path):
         # fill experience replay
         # start the process
         print 'game'
@@ -44,8 +44,6 @@ class DQNAgent:
                 self.env.new_game()
             
             #yield self.step
-
-        self.ep = 0.2
         
         num_trains = 0
         
@@ -59,7 +57,7 @@ class DQNAgent:
             # Act on the environment
             cur_action = self.get_next_action(cur_state, self.ep)
             
-            next_state, reward, done = self.env.next_state(cur_action, render = (self.step % 800 == 0)) 
+            next_state, reward, done = self.env.next_state(cur_action, render = False)#(self.step % 800 == 0)) 
             # Save experience
             self.store_exp(next_state, cur_action, reward, done)
             
@@ -76,13 +74,13 @@ class DQNAgent:
                     self.store_exp(next_state, cur_action, reward, True)
                     # Update target network
                     print("step:{:8d} ep:{:05.4f} q:{:10.4f} l:{:10.4f} r:{:10.4f}".format(self.step, self.ep, tot_q, tot_loss, tot_reward/18./self.train_freq))
-                    self.ep = max(self.ep*0.99-0.0002,0)
+                    self.ep = max(self.ep*0.97-0.0003,0)
                     self.update_target()
                     tot_q = 0
                     tot_loss = 0
                     tot_reward = 0
-                    self.save_weights('./weights/test1')
-                    for _ in xrange(500):
+                    self.save_weights(save_path)
+                    for _ in xrange(100):
                         cur_state = self.env.cur_state
                         cur_action = self.get_next_action(cur_state, eps = 0.01)
                         _,_,done1 = self.env.next_state(cur_action, render = False) 
@@ -107,7 +105,7 @@ class DQNAgent:
         self.env.new_game()
         for self.step in xrange(num_steps):
             cur_state = self.env.cur_state
-            cur_action = self.get_next_action(cur_state, eps = 0.001)
+            cur_action = self.get_next_action(cur_state, eps = 0.00)
             _,_,done1 = self.env.next_state(cur_action, render = True) 
             sleep(0.08)
             if done1:
@@ -139,4 +137,3 @@ class DQNAgent:
 
     def load_weights(self, path):
         self.qnet.load_net(path)
-

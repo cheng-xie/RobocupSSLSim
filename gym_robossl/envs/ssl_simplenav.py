@@ -63,7 +63,7 @@ class SSLSimpleNav(gym.Env):
             # Nop, fire left engine, up engine, right engin, down
             self.action_space = spaces.Discrete(5)
 
-        self._reset()
+        self.hard_reset()
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -79,7 +79,7 @@ class SSLSimpleNav(gym.Env):
         #self.world.DestroyBody(self.legs[0])
         #self.world.DestroyBody(self.legs[1])
 
-    def _reset(self):
+    def hard_reset(self):
         self._destroy()
         #self.world.contactListener_keepref = ContactDetector(self)
         #self.world.contactListener = self.world.contactListener_keepref
@@ -139,7 +139,14 @@ class SSLSimpleNav(gym.Env):
         self.drawlist += [self.robot]
         self.drawlist += [self.ball]
         self.drawlist += [self.moon]
+        return self._step(np.array([0,0]) if self.continuous else 0)[0]
 
+    def _reset(self):
+        W = VIEWPORT_W/SCALE
+        H = VIEWPORT_H/SCALE
+        
+        self.ball.position = (random.randint(W*2/8, W*6/8), random.randint(H*2/8, H*6/8))
+        self.robot.position = (random.randint(W*2/8, W*6/8), random.randint(H*2/8, H*6/8))
         return self._step(np.array([0,0]) if self.continuous else 0)[0]
     
     def _step(self, action):
@@ -180,7 +187,7 @@ class SSLSimpleNav(gym.Env):
             self.np_random.uniform(-INITIAL_RANDOM, INITIAL_RANDOM)
         ), True)
         '''
-        self.world.Step(16./FPS, 6*30, 2*30)
+        self.world.Step(8./FPS, 6*30, 2*30)
         
 
         # Package world state
@@ -189,14 +196,14 @@ class SSLSimpleNav(gym.Env):
         posball = self.ball.position
         velball = self.ball.linearVelocity
         state = [
-            pos.x/(VIEWPORT_W/SCALE),
-            pos.y/(VIEWPORT_W/SCALE),
-            vel.x*(VIEWPORT_W/SCALE)/FPS,
-            vel.y*(VIEWPORT_H/SCALE)/FPS,
+            pos.x/(VIEWPORT_W/SCALE)-0.5,
+            pos.y/(VIEWPORT_H/SCALE)-0.5,
+            vel.x/(VIEWPORT_W/SCALE)*FPS/10,
+            vel.y/(VIEWPORT_H/SCALE)*FPS/10,
             #self.robot.angle,
             #20.0*self.robot.angularVelocity/FPS,
-            posball.x/(VIEWPORT_W/SCALE),
-            posball.y/(VIEWPORT_W/SCALE) 
+            posball.x/(VIEWPORT_W/SCALE)-0.5,
+            posball.y/(VIEWPORT_W/SCALE)-0.5 
             ]
         #print state
         #raw_input()
@@ -212,14 +219,14 @@ class SSLSimpleNav(gym.Env):
         '''
 
         reward -= powert*0.0010  # less fuel spent is better
-        reward -= ((pos-(posball)).lengthSquared/(VIEWPORT_W/SCALE)/(VIEWPORT_W/SCALE)-0.08)  # get close to the ball
+        reward -= ((pos-(posball)).lengthSquared/(VIEWPORT_W/SCALE)/(VIEWPORT_W/SCALE))  # get close to the ball
         #reward -= s_power*0.03
         #print reward 
 
         # Determine completion
         done = False
         if (pos-(posball)).length<2:
-            reward += 2
+            reward += 1.5
             done = True
         ''' 
         if self.game_over or abs(state[0]) >= 1.0:
